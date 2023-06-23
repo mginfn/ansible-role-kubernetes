@@ -1,0 +1,55 @@
+---
+
+# - name: Download Kafka chart and decompress
+#   block:
+#     - name: Download Kafka chart
+#       ansible.builtin.get_url:
+#         url: "{{ kafka_chart_tarball }}"
+#         dest: /tmp/kafka-helm-dc.tar.gz
+#         mode: 0644
+- name: Download Kafka chart and decompress
+  ansible.builtin.unarchive:
+    src: "{{ kafka_chart_tarball }}"
+    dest: /tmp/kafka-helm-dc
+    remote_src: true
+
+- name: Install Kafka chart
+  block:
+    - name: Install Kafka chart
+      ansible.builtin.shell:
+        cmd: |
+          helm upgrade --install {{ kafka_release_name }} /tmp/kafka-helm-dc \
+            --set global.namespace={{ kafka_namespace }} \
+            --set global.zookeeper.replicas=1 \
+            --set global.zookeeper.ports.public_client=32181 \
+            --set global.kafka.replicas=1 \
+            --set global.kafka.ports.public_client=30092 \
+            --set global.kafka.public_ips="{ {{ kube_front_end_ip }} }"
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kafka_chart_install
+      changed_when: >
+        kafka_chart_install.rc == 0
+      failed_when: >
+        kafka_chart_install.rc != 0
+      ignore_errors: true
+    - name: Show result of installing Kafka chart
+      ansible.builtin.debug:
+        var: kafka_chart_install
+
+- name: Fail if Kafka chart has not been installed
+  block:
+    - name: Get status of Kafka chart release
+      ansible.builtin.command: helm status {{ kafka_release_name }}
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kafka_chart_status
+      changed_when: false
+    - name: Show Kafka chart status
+      ansible.builtin.debug:
+        var: kafka_chart_status
+    - name: Fail if Kafka chart has not been installed
+      when:
+        - ('STATUS: deployed' not in kafka_chart_status.stdout)
+      ansible.builtin.fail:
+        msg: Error installing Kafka chart

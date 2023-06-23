@@ -284,3 +284,9 @@
 - name: KUBECONFIG file
   debug:
     var: kubeconfig.stdout.split('\n')
+
+- name: Install Kafka
+  delegate_to: "{{ kube_front_end_ip }}"
+  run_once: true
+  ansible.builtin.import_tasks: kafka.yaml
+  when: enable_kafka
