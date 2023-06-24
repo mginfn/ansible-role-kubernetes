@@ -1,16 +1,9 @@
 ---
 
-# - name: Download Kafka chart and decompress
-#   block:
-#     - name: Download Kafka chart
-#       ansible.builtin.get_url:
-#         url: "{{ kafka_chart_tarball }}"
-#         dest: /tmp/kafka-helm-dc.tar.gz
-#         mode: 0644
 - name: Download Kafka chart and decompress
   ansible.builtin.unarchive:
     src: "{{ kafka_chart_tarball }}"
-    dest: /tmp/kafka-helm-dc
+    dest: /tmp
     remote_src: true
 
 - name: Install Kafka chart
@@ -18,13 +11,17 @@
     - name: Install Kafka chart
       ansible.builtin.shell:
         cmd: |
-          helm upgrade --install {{ kafka_release_name }} /tmp/kafka-helm-dc \
+          helm upgrade --install {{ kafka_release_name }} /tmp/{{ (kafka_chart_tarball.split('/') | last).split('.') | first }} \
             --set global.namespace={{ kafka_namespace }} \
-            --set global.zookeeper.replicas=1 \
-            --set global.zookeeper.ports.public_client=32181 \
-            --set global.kafka.replicas=1 \
-            --set global.kafka.ports.public_client=30092 \
-            --set global.kafka.public_ips="{ {{ kube_front_end_ip }} }"
+            --set global.kafka.enabled={{ kafka_enabled }} \
+            --set global.kafka.replicas={{ kafka_replicas }} \
+            --set global.kafka.ports.public_client={{ kafka_enable_public_connections | ternary(kafka_public_port, false) }} \
+            --set global.kafka.public_ips="{{ '{' + kafka_public_ips + '}' }}" \
+            --set global.zookeeper.enabled={{ (zookeeper_replicas > 0) | bool }} \
+            --set global.zookeeper.replicas={{ zookeeper_replicas }} \
+            --set global.zookeeper.ports.public_client={{ zookeeper_enable_public_connections | ternary(zookeeper_public_port, false) }} \
+            --set global.kafka-ui.enabled="{{ kafka_ui_enabled }}" \
+            --set global.kafka-ui.ports.public_client=30080
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
       register: kafka_chart_install
@@ -45,11 +42,12 @@
         KUBECONFIG: /etc/kubernetes/admin.conf
       register: kafka_chart_status
       changed_when: false
+      ignore_errors: true # { "rc": 1, "stderr": "Error: release: not found" }
     - name: Show Kafka chart status
       ansible.builtin.debug:
         var: kafka_chart_status
     - name: Fail if Kafka chart has not been installed
-      when:
-        - ('STATUS: deployed' not in kafka_chart_status.stdout)
       ansible.builtin.fail:
         msg: Error installing Kafka chart
+      when: >
+        ('STATUS: deployed' not in kafka_chart_status.stdout)

@@ -54,8 +54,16 @@ calico_version: v3.24
 enable_gpu: false
 gpu_support_role: git+https://baltig.infn.it/infn-cloud/ansible-role-gpu-support,v1.2.0
 
-# Properties related to Kafka
-enable_kafka: true
+# Properties related to Kafka/Zookeeper
 kafka_chart_tarball: https://baltig.infn.it/mgattari/helm-kafka-dc/-/archive/master/helm-kafka-dc-master.tar.gz
 kafka_release_name: kdc
 kafka_namespace: kafka-dc
+kafka_enabled: false
+kafka_replicas: 1
+kafka_enable_public_connections: false
+kafka_public_port: 30092
+# kafka_public_ips:
+zookeeper_replicas: 0
+zookeeper_enable_public_connections: false
+zookeeper_public_port: 32181
+kafka_ui_enabled: false

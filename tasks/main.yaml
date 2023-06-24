@@ -3,8 +3,8 @@
   ansible.builtin.command: swapoff -a
   changed_when: false
 
-# - name: Include debug info tasks
-#   ansible.builtin.include_tasks: debug-info.yaml
+- name: Include debug info tasks
+  ansible.builtin.include_tasks: debug-info.yaml
 
 - name: Add the br_netfilter module
   modprobe:

@@ -289,4 +289,4 @@
   delegate_to: "{{ kube_front_end_ip }}"
   run_once: true
   ansible.builtin.import_tasks: kafka.yaml
-  when: enable_kafka
+  when: kafka_enabled
