@@ -63,6 +63,11 @@ kafka_replicas: 1
 kafka_enable_public_connections: false
 kafka_public_port: 30092
 # kafka_public_ips:
+kafka_kraft_enabled: false
+kafka_kraft_replicas: 1
+kafka_kraft_enable_public_connections: false
+kafka_kraft_public_port: 31093
+zookeeper_enabled: false
 zookeeper_replicas: 0
 zookeeper_enable_public_connections: false
 zookeeper_public_port: 32181

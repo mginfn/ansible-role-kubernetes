@@ -17,7 +17,10 @@
             --set global.kafka.replicas={{ kafka_replicas }} \
             --set global.kafka.ports.public_client={{ kafka_enable_public_connections | ternary(kafka_public_port, false) }} \
             --set global.kafka.public_ips="{{ '{' + kafka_public_ips + '}' }}" \
-            --set global.zookeeper.enabled={{ (zookeeper_replicas > 0) | bool }} \
+            --set global.kafka.kraft.enabled={{ kafka_kraft_enabled and (kafka_kraft_replicas > 0) }} \
+            --set global.kafka.kraft.replicas={{ kafka_kraft_replicas }} \
+            --set global.kafka.kraft.ports.public_client={{ kafka_kraft_enable_public_connections | ternary(kafka_kraft_public_port, false) }} \
+            --set global.zookeeper.enabled={{ zookeeper_enabled and (zookeeper_replicas > 0) }} \
             --set global.zookeeper.replicas={{ zookeeper_replicas }} \
             --set global.zookeeper.ports.public_client={{ zookeeper_enable_public_connections | ternary(zookeeper_public_port, false) }} \
             --set global.kafka-ui.enabled="{{ kafka_ui_enabled }}" \
