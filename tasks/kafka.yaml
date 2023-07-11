@@ -8,23 +8,51 @@
 
 - name: Install Kafka chart
   block:
-    - name: Install Kafka chart
-      ansible.builtin.shell:
-        cmd: |
-          helm upgrade --install {{ kafka_release_name }} /tmp/{{ (kafka_chart_tarball.split('/') | last).split('.') | first }} \
-            --set global.namespace={{ kafka_namespace }} \
-            --set global.kafka.enabled={{ kafka_enabled }} \
-            --set global.kafka.replicas={{ kafka_replicas }} \
-            --set global.kafka.ports.public_client={{ kafka_enable_public_connections | ternary(kafka_public_port, false) }} \
-            --set global.kafka.public_ips="{{ '{' + kafka_public_ips + '}' }}" \
-            --set global.kafka.kraft.enabled={{ kafka_kraft_enabled and (kafka_kraft_replicas > 0) }} \
-            --set global.kafka.kraft.replicas={{ kafka_kraft_replicas }} \
-            --set global.kafka.kraft.ports.public_client={{ kafka_kraft_enable_public_connections | ternary(kafka_kraft_public_port, false) }} \
-            --set global.zookeeper.enabled={{ zookeeper_enabled and (zookeeper_replicas > 0) }} \
-            --set global.zookeeper.replicas={{ zookeeper_replicas }} \
-            --set global.zookeeper.ports.public_client={{ zookeeper_enable_public_connections | ternary(zookeeper_public_port, false) }} \
-            --set global.kafka-ui.enabled="{{ kafka_ui_enabled }}" \
+    - name: Compose Kafka chart install command
+      ansible.builtin.set_fact:
+        kafka_chart_install_command: >-
+          helm upgrade --install {{ kafka_release_name }} /tmp/{{ (kafka_chart_tarball.split('/') | last).split('.') | first }}
+            --set global.namespace={{ kafka_namespace }}
+            --set global.kafka.enabled={{ kafka_enabled }}
+            --set global.kafka.replicas={{ kafka_replicas }}
+            --set global.kafka.ports.public_client={{ kafka_enable_public_connections | ternary(kafka_public_port, false) }}
+            --set global.kafka.public_ips="{{ '{' + kafka_public_ips + '}' }}"
+            --set global.kafka.kraft.enabled={{ kafka_kraft_enabled and (kafka_kraft_replicas > 0) }}
+            --set global.kafka.kraft.replicas={{ kafka_kraft_replicas }}
+            --set global.kafka.kraft.ports.public_client={{ kafka_kraft_enable_public_connections | ternary(kafka_kraft_public_port, false) }}
+            --set global.zookeeper.enabled={{ zookeeper_enabled and (zookeeper_replicas > 0) }}
+            --set global.zookeeper.replicas={{ zookeeper_replicas }}
+            --set global.zookeeper.ports.public_client={{ zookeeper_enable_public_connections | ternary(zookeeper_public_port, false) }}
+            --set global.kafka-ui.enabled="{{ kafka_ui_enabled }}"
             --set global.kafka-ui.ports.public_client=30080
+    - name: Install Kafka chart [dry-run]
+      ansible.builtin.command: "{{ kafka_chart_install_command }} --dry-run --debug"
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kafka_chart_install_dry_run
+      changed_when: false
+      ignore_errors: true
+    - name: Show Kafka chart rendered manifest [dry-run]
+      ansible.builtin.debug:
+        var: kafka_chart_install_dry_run
+    - name: Install Kafka chart
+      ansible.builtin.command: "{{ kafka_chart_install_command }}"
+      # ansible.builtin.shell:
+      #   cmd: |
+      #     helm upgrade --install {{ kafka_release_name }} /tmp/{{ (kafka_chart_tarball.split('/') | last).split('.') | first }} \
+      #       --set global.namespace={{ kafka_namespace }} \
+      #       --set global.kafka.enabled={{ kafka_enabled }} \
+      #       --set global.kafka.replicas={{ kafka_replicas }} \
+      #       --set global.kafka.ports.public_client={{ kafka_enable_public_connections | ternary(kafka_public_port, false) }} \
+      #       --set global.kafka.public_ips="{{ '{' + kafka_public_ips + '}' }}" \
+      #       --set global.kafka.kraft.enabled={{ kafka_kraft_enabled and (kafka_kraft_replicas > 0) }} \
+      #       --set global.kafka.kraft.replicas={{ kafka_kraft_replicas }} \
+      #       --set global.kafka.kraft.ports.public_client={{ kafka_kraft_enable_public_connections | ternary(kafka_kraft_public_port, false) }} \
+      #       --set global.zookeeper.enabled={{ zookeeper_enabled and (zookeeper_replicas > 0) }} \
+      #       --set global.zookeeper.replicas={{ zookeeper_replicas }} \
+      #       --set global.zookeeper.ports.public_client={{ zookeeper_enable_public_connections | ternary(zookeeper_public_port, false) }} \
+      #       --set global.kafka-ui.enabled="{{ kafka_ui_enabled }}" \
+      #       --set global.kafka-ui.ports.public_client=30080
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
       register: kafka_chart_install
@@ -33,7 +61,7 @@
       failed_when: >
         kafka_chart_install.rc != 0
       ignore_errors: true
-    - name: Show result of installing Kafka chart
+    - name: Show Kafka chart install output
       ansible.builtin.debug:
         var: kafka_chart_install
 
