@@ -76,7 +76,7 @@
       changed_when: false
       failed_when: (kubelet_status.rc != 0) or ('active (running)' not in kubelet_status.stdout)
       ignore_errors: true
-    - name: Show status of kubelet service
+    - name: Log status of kubelet service
       ansible.builtin.debug:
         var: kubelet_status
     - name: Fail if kublet service is not running

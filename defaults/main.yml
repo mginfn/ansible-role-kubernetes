@@ -72,3 +72,5 @@ zookeeper_replicas: 0
 zookeeper_enable_public_connections: false
 zookeeper_public_port: 32181
 kafka_ui_enabled: false
+kafka_ui_password: pass
+

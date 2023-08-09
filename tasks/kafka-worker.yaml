@@ -1,0 +1,10 @@
+---
+
+# https://docs.confluent.io/platform/current/installation/docker/operations/external-volumes.html#data-volumes-for-ak-in-zk-mode
+- name: Create Kafka data folder
+  ansible.builtin.file:
+    path: /mnt/kafka
+    state: directory
+    mode: '0755'
+    owner: '1000'
+    group: '1000'

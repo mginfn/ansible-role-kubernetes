@@ -233,7 +233,7 @@
           ('Release "grafana" does not exist. Installing it now.' not in helm_grafana_install.stdout) and
           ('Release "grafana" has been upgraded.' not in helm_grafana_install.stdout)
         )
-    - name: Show result of Helm install grafana
+    - name: Log results of Helm install grafana
       ansible.builtin.debug:
         var: helm_grafana_install
     - name: Kubectl apply -f /etc/grafana-secret.yml
@@ -243,7 +243,7 @@
         KUBECONFIG: /etc/kubernetes/admin.conf
       changed_when:
         - kubectl_grafana_secret_apply.rc == 0
-    - name: Show result of Kubectl apply -f /etc/grafana-secret.yml
+    - name: Log results of Kubectl apply -f /etc/grafana-secret.yml
       ansible.builtin.debug:
         var: kubectl_grafana_secret_apply
 
@@ -285,8 +285,3 @@
   debug:
     var: kubeconfig.stdout.split('\n')
 
-- name: Install Kafka
-  delegate_to: "{{ kube_front_end_ip }}"
-  run_once: true
-  ansible.builtin.import_tasks: kafka.yaml
-  when: kafka_enabled
