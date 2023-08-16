@@ -8,6 +8,43 @@
 
 - name: Install Kafka chart
   block:
+    # - name: Create Kafka namespace
+    #   when: kafka_ui_enabled
+    #   ansible.builtin.shell: |
+    #     cat << EOF | kubectl create -f -
+    #     apiVersion: v1
+    #     kind: Namespace
+    #     metadata:
+    #       name: {{ kafka_namespace }}
+    #     EOF
+    #   environment:
+    #     KUBECONFIG: /etc/kubernetes/admin.conf
+    #   register: kubectl_create_kafka_namespace
+    #   changed_when:
+    #     - kubectl_create_kafka_namespace.rc == 0
+    #   failed_when:
+    #     - kubectl_create_kafka_namespace.rc != 0
+    # - name: Create kafka-ui-cert-secret
+    #   when: kafka_ui_enabled
+    #   ansible.builtin.shell: |
+    #     cat << EOF | kubectl create -f -
+    #     apiVersion: v1
+    #     kind: Secret
+    #     metadata:
+    #       name: kafka-ui-cert-secret
+    #       namespace: {{ kafka_namespace }}
+    #     type: Opaque
+    #     stringData:
+    #       admin-user: admin
+    #       admin-password: {{ kube_admin_token }}
+    #     EOF
+    #   environment:
+    #     KUBECONFIG: /etc/kubernetes/admin.conf
+    #   register: kubectl_create_kafka_ui_secret
+    #   changed_when:
+    #     - kubectl_create_kafka_ui_secret.rc == 0
+    #   failed_when:
+    #     - kubectl_create_kafka_ui_secret.rc != 0
     - name: Compose Kafka chart install command
       ansible.builtin.set_fact:
         kafka_chart_install_command: >-
@@ -23,9 +60,17 @@
             --set global.zookeeper.enabled={{ zookeeper_enabled and (zookeeper_replicas > 0) }}
             --set global.zookeeper.replicas={{ zookeeper_replicas }}
             --set global.zookeeper.ports.public_client={{ zookeeper_enable_public_connections | ternary(zookeeper_public_port, false) }}
-            --set global.kafka-ui.enabled="{{ kafka_ui_enabled }}"
-            --set global.kafka-ui.admin_password="{{ kafka_ui_admin_password }}"
-            --set global.kafka-ui.ports.public_client=30080
+            --set global.kafka-ui.enabled={{ kafka_ui_enabled }}
+            --set global.kafka-ui.ports.public_client=80
+            --set kafka-ui.env.admin_password={{ kafka_ui_admin_password }}
+            --set kafka-ui.ingress.dns_name={{ dns_name }}
+            --set kafka-ui.ingress.cluster_cert_issuer={{ cluster_issuer_name | trim }}
+            --set kafka-ui.ingress.tls_secret=kafka-ui-cert-secret
+            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[0\].key=nvidia/nvidia-container-runtime
+            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[0\].operator=DoesNotExist
+            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[1\].key=node-type
+            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[1\].operator=In
+            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[1\].values\[0\]=worker
     - name: Install Kafka chart [dry-run]
       ansible.builtin.command: "{{ kafka_chart_install_command }} --dry-run --debug"
       environment:
@@ -33,7 +78,7 @@
       register: kafka_chart_install_dry_run
       changed_when: false
       ignore_errors: true
-    - name: Log Kafka chart rendered manifest [dry-run]
+    - name: Log Kafka chart install output [dry-run]
       ansible.builtin.debug:
         var: kafka_chart_install_dry_run
     - name: Install Kafka chart

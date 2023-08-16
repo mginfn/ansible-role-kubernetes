@@ -22,10 +22,10 @@
     - net.ipv4.ip_forward
   notify: sysctl-system
 
-- name: Include tasks for OS family {{ ansible_os_family }}
+- name: Include tasks for OS family={{ ansible_os_family }}
   ansible.builtin.include_tasks: "{{ ansible_os_family }}.yaml"
 
-- name: Include tasks for node type {{ kube_type_of_node }}
+- name: Include tasks for node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
   ansible.builtin.include_tasks: "{{ kube_type_of_node }}.yaml"
 
 - name: Set node labels
@@ -62,6 +62,6 @@
         - kafka_enabled
         - kube_type_of_node == 'wn'
 
-- name: Add GPU support for node type {{ kube_type_of_node }}
+- name: Add GPU support for node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
   ansible.builtin.include_tasks: gpu-support.yaml
   when: (enable_gpu | default(false) | bool)
