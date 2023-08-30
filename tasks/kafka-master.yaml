@@ -66,11 +66,7 @@
             --set kafka-ui.ingress.dns_name={{ dns_name }}
             --set kafka-ui.ingress.cluster_cert_issuer={{ cluster_issuer_name | trim }}
             --set kafka-ui.ingress.tls_secret=kafka-ui-cert-secret
-            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[0\].key=nvidia/nvidia-container-runtime
-            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[0\].operator=DoesNotExist
-            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[1\].key=node-type
-            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[1\].operator=In
-            --set kafka.localVolume.nodeSelectorTerms\[0\].matchExpressions\[1\].values\[0\]=worker
+            --set kafka.volume.storageClass=longhorn
     - name: Install Kafka chart [dry-run]
       ansible.builtin.command: "{{ kafka_chart_install_command }} --dry-run --debug"
       environment:
