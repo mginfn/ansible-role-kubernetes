@@ -28,39 +28,39 @@
 - name: Include tasks for node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
   ansible.builtin.include_tasks: "{{ kube_type_of_node }}.yaml"
 
-- name: Set node labels
-  block:
-    - name: Get hostname
-      ansible.builtin.command: hostname
-      register: hostname
-      changed_when: false
-    - name: Log hostname
-      ansible.builtin.debug:
-        msg: "{{ hostname }}"
-    - name: Set node label node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
-      ansible.builtin.shell:
-        cmd: |
-          kubectl label node {{ hostname.stdout }} --overwrite \
-          node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
-      environment:
-        KUBECONFIG: /etc/kubernetes/admin.conf
-      register: kubectl_add_label_node_type
-      changed_when: kubectl_add_label_node_type.rc == 0
-      delegate_to: "{{ (kube_type_of_node == 'wn') | ternary(kube_front_end_ip, 'localhost') }}"
+# - name: Set node labels
+#   block:
+#     - name: Get hostname
+#       ansible.builtin.command: hostname
+#       register: hostname
+#       changed_when: false
+#     - name: Log hostname
+#       ansible.builtin.debug:
+#         msg: "{{ hostname }}"
+#     - name: Set node label node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
+#       ansible.builtin.shell:
+#         cmd: |
+#           kubectl label node {{ hostname.stdout }} --overwrite \
+#           node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
+#       environment:
+#         KUBECONFIG: /etc/kubernetes/admin.conf
+#       register: kubectl_add_label_node_type
+#       changed_when: kubectl_add_label_node_type.rc == 0
+#       delegate_to: "{{ (kube_type_of_node == 'wn') | ternary(kube_front_end_ip, 'localhost') }}"
 
-- name: Install Kafka
-  block:
-    - name: Install Kafka [master]
-      run_once: true
-      ansible.builtin.import_tasks: kafka-master.yaml
-      when:
-        - kafka_enabled
-        - kube_type_of_node != 'wn'
-    - name: Install Kafka [worker]
-      ansible.builtin.import_tasks: kafka-worker.yaml
-      when:
-        - kafka_enabled
-        - kube_type_of_node == 'wn'
+# - name: Install Kafka
+#   block:
+#     - name: Install Kafka [master]
+#       run_once: true
+#       ansible.builtin.include_tasks: kafka-master.yaml
+#       when:
+#         - kafka_enabled
+#         - kube_type_of_node != 'wn'
+#     - name: Install Kafka [worker]
+#       ansible.builtin.include_tasks: kafka-worker.yaml
+#       when:
+#         - kafka_enabled
+#         - kube_type_of_node == 'wn'
 
 - name: Add GPU support for node-type={{ (kube_type_of_node == 'wn') | ternary('worker', 'master') }}
   ansible.builtin.include_tasks: gpu-support.yaml

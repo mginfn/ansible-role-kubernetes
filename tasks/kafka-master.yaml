@@ -62,11 +62,15 @@
             --set global.zookeeper.ports.public_client={{ zookeeper_enable_public_connections | ternary(zookeeper_public_port, false) }}
             --set global.kafka-ui.enabled={{ kafka_ui_enabled }}
             --set global.kafka-ui.ports.public_client=80
+            --set global.kafka-ui.ingress.dns_name={{ dns_name }}
+            --set global.kafka-ui.ingress.cluster_cert_issuer={{ cluster_issuer_name | trim }}
+            --set global.kafka-ui.ingress.tls_secret=kafka-ui-cert-secret
+            --set kafka-ui.env.admin_user=admin
             --set kafka-ui.env.admin_password={{ kafka_ui_admin_password }}
-            --set kafka-ui.ingress.dns_name={{ dns_name }}
-            --set kafka-ui.ingress.cluster_cert_issuer={{ cluster_issuer_name | trim }}
-            --set kafka-ui.ingress.tls_secret=kafka-ui-cert-secret
             --set kafka.volume.storageClass=longhorn
+            --set kafka.security.mechanism=sasl_plain
+            --set kafka.security.credentials.admin_user=admin
+            --set kafka.security.credentials.admin_password=pass
     - name: Install Kafka chart [dry-run]
       ansible.builtin.command: "{{ kafka_chart_install_command }} --dry-run --debug"
       environment:
