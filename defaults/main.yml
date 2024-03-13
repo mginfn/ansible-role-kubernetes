@@ -1,5 +1,5 @@
 # Version to install or latest
-kube_version: 1.28.3
+kube_version: 1.28.7
 # Type of node front or wn
 kube_type_of_node: front
 # IP address or name of the Kube front node
@@ -38,17 +38,17 @@ nodelabel: ''
 
 # Software versions
 kube_install_helm: true
-helm_version: v3.13.2
-nginx_ingress_helm_version: 4.9.0
-cert_manager_helm_version: v1.13.2
+helm_version: v3.13.3
+nginx_ingress_helm_version: 4.9.1
+cert_manager_helm_version: v1.13.5
 cert_manager_type: letsencrypt-prod # [self-signed, letsencrypt-staging, letsencrypt-prod]
 cert_manager_email: '' # used only for letsencrypt 
 dashboard_helm_version: 6.0.8
-prometheus_helm_version: 25.8.0
+prometheus_helm_version: 25.17.0
 kube_eagle_helm_version: 2.0.0
-grafana_helm_version: 7.0.11
+grafana_helm_version: 7.3.6
 calico_version: v3.26
-nerdctl_version: 1.7.1
+nerdctl_version: 1.7.4
 
 # If true, running kubernetes etcd in ramdisk
 etcd_in_RAM: true
