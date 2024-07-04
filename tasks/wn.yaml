@@ -4,12 +4,6 @@
     name: nfs-common
     update_cache: yes
     cache_valid_time: 3600
-  when: "ansible_os_family == 'Debian'"
-
-- name: update repositories cache and install NFS
-  yum:
-    name: nfs-utils
-  when: "ansible_os_family == 'RedHat'"
 
 - name: Ensure rpcbind is running
   service:
@@ -45,7 +39,7 @@
 
 - name: Add KUBELET_EXTRA_ARGS
   lineinfile:
-    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     line: 'Environment="KUBELET_EXTRA_ARGS={{ kubelet_extra_args }}"'
     regexp: '^Environment="KUBELET_EXTRA_ARGS'
     insertafter: '\[Service\]'

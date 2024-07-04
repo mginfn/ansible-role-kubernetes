@@ -3,15 +3,12 @@
   ansible.builtin.command: swapoff -a
   changed_when: false
 
-# - name: Include debug info tasks
-#   ansible.builtin.include_tasks: debug-info.yaml
-
 - name: Add the br_netfilter module
   modprobe:
     name: br_netfilter
     state: present
 
-- name: Let iptables see bridged traffic.
+- name: Let iptables see bridged traffic
   sysctl:
     name: "{{ item }}"
     value: '1'

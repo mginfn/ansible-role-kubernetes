@@ -35,35 +35,15 @@
 - name: Install calico
   block:
   - get_url:
-      url: https://projectcalico.docs.tigera.io/archive/{{ calico_version }}/manifests/calico.yaml
+      url: https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml
       dest: /etc/kube-calico.yml
   - command: kubectl apply -f /etc/kube-calico.yml
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
   when: network_manager == "calico"
 
-- name: Set correct endpoint for CRI
-  copy:
-    src: files/crictl.yaml
-    dest: /etc/crictl.yaml
-    mode: 0644
-
 - ansible.builtin.include_tasks: helm.yaml
   when: kube_install_helm
-
-#- name: Add Kube API server options
-#  lineinfile:
-#    path: /etc/kubernetes/manifests/kube-apiserver.yaml
-#    line: '    - {{ item.option }}={{ item.value }}'
-#    regexp: '^    - {{ item.option }}='
-#    insertafter: '    - kube-apiserver'
-#  notify: restart kubeapi
-#  with_items: "{{ kube_apiserver_options }}"
-
-- name: Wait Kube to start
-  wait_for:
-    host: "{{ kube_api_server }}"
-    port: 6443
 
 - name: Set iptables for ingress floatingIPs
   block:
@@ -79,8 +59,8 @@
       jump: ACCEPT
       comment: "managed by kubernetes ansible role"
     loop:
-      - 443
-      - 80        
+      - "443"
+      - "80"
   - name: 'iptables -t nat -A PREROUTING -p tcp -d {{ nginx_ingress.master_public_ip }} --dport 443,80 -j DNAT --to-destination {{ nginx_ingress.master_private_ip }}:443,80'
     iptables:
       table: nat
@@ -92,8 +72,8 @@
       to_destination: "{{ nginx_ingress.master_private_ip }}:{{ item }}"
       comment: "managed by kubernetes ansible role"
     loop:
-      - 443
-      - 80              
+      - "443"
+      - "80"
   - name: 'iptables -t nat -A POSTROUTING ! -s 127.0.0.1 -j MASQUERADE'
     iptables:
       table: nat     
@@ -150,7 +130,7 @@
 #  when: notready_nodes.stdout | length > 0
 
 - name: Delete NotReady nodes
-  ansible.builtin.shell: "kubectl delete node {{ item }} "
+  ansible.builtin.shell: "kubectl delete node {{ item }}"
   loop:
     "{{ notready_nodes.stdout.split('\n') }}"
   register: output_delete
