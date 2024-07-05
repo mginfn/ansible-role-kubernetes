@@ -4,15 +4,15 @@
 
 - name: Create a directory if it does not exist
   file:
-    path: /etc/kubernetes/pki
+    path: /etc/kubernetes/pki/
     state: directory
-    mode: 0755
+    mode: '0755'
 
 - name: Create auth data file with an admin user
   copy:
     content: '{{ kube_admin_token }},{{ kube_admin_username }},100,"users,system:masters"'
     dest: /etc/kubernetes/pki/auth
-    mode: 0600
+    mode: '0600'
 
 - name: Kubeadm init
   command: kubeadm init --pod-network-cidr={{ kube_pod_network_cidr }} --token={{ kube_token }} --token-ttl {{ kube_token_ttl }} --apiserver-advertise-address={{ kube_api_server }} creates=/etc/kubernetes/admin.conf
@@ -145,43 +145,7 @@
 
 - ansible.builtin.include_tasks: software-installation.yaml
 
-- name: Expose apiserver through ingress
-  block:
-  - template:
-      src: templates/api-server-ingress.yaml
-      dest: /etc/api-server-ingress.yaml
-  - command: kubectl apply -f /etc/api-server-ingress.yaml
-    environment:
-      KUBECONFIG: /etc/kubernetes/admin.conf
-
-- name: Create service account for remote access
-  block:
-  - copy:
-      src: files/kubeconfig
-      dest: /etc/kubeconfig
-  - copy:
-      src: files/admin-cred.yaml
-      dest: /etc/admin-cred.yml
-  - shell: |
-      kubectl apply -f /etc/admin-cred.yml
-      kubectl create --dry-run=client clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:admin -o yaml | kubectl apply -f -
-      export TOKEN=$(kubectl -n kube-system get secret admin-token -o jsonpath='{.data.token}' | base64 -d)
-      kubectl config --kubeconfig=/etc/kubeconfig set-credentials admin --token=$TOKEN
-      kubectl config --kubeconfig=/etc/kubeconfig set-cluster public --server=https://api-kubernetes.{{ dns_name }} --insecure-skip-tls-verify
-      kubectl config --kubeconfig=/etc/kubeconfig set-context public --cluster=public --namespace=default --user=admin
-      kubectl config --kubeconfig=/etc/kubeconfig use-context public
-    environment:
-      KUBECONFIG: /etc/kubernetes/admin.conf
-
-- name: Register kubeconfig
-  shell: kubectl config --kubeconfig=/etc/kubeconfig view --raw
-  register: kubeconfig
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-
-- name: KUBECONFIG file
-  debug:
-    var: kubeconfig.stdout.split('\n')
+- ansible.builtin.include_tasks: api-configuration.yaml
 
 - ansible.builtin.include_tasks: etcdRAM_backup.yaml
   when: etcd_in_RAM

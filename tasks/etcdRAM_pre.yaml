@@ -1,9 +1,9 @@
 ---
 - name: Create directory /var/lib/etcd
   file:
-    path: /var/lib/etcd
+    path: /var/lib/etcd/
     state: directory
-    mode: 0755
+    mode: '0755'
 
 - name: Move ETCD in RAM
   mount:

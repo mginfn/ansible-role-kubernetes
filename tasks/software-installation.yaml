@@ -128,12 +128,12 @@
       ansible.builtin.template:
         src: templates/grafana-secret.yaml
         dest: /etc/grafana-secret.yml
-        mode: 0644
+        mode: '0644'
     - name: Copy templates/grafana-values.yaml
       ansible.builtin.template:
         src: templates/grafana-values.yaml
         dest: /etc/grafana-values.yml
-        mode: 0644
+        mode: '0644'
     - name: Create grafana namespace
       ansible.builtin.command: kubectl create ns grafana
       environment:

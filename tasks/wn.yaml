@@ -7,15 +7,15 @@
 
 - name: Create a directory if it does not exist
   file:
-    path: /etc/kubernetes/pki
+    path: /etc/kubernetes/pki/
     state: directory
-    mode: 0755
+    mode: '0755'
 
 - name: Create auth data file with an admin user
   copy:
     content: '{{ kube_admin_token }},{{ kube_admin_username }},100,"users,system:masters"'
     dest: /etc/kubernetes/pki/auth
-    mode: 0600
+    mode: '0600'
 
 - name: Add node to kube cluster with node_name == {{ node_name }}
   command: kubeadm join --node-name {{ node_name }} --token {{ kube_token }} {{ kube_server }}:6443 --discovery-token-unsafe-skip-ca-verification creates=/etc/kubernetes/kubelet.conf
