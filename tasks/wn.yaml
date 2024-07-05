@@ -74,7 +74,7 @@
         msg: kubelet is not running!
       when: kubelet_status is failed
 
-- name: Get hostname ands set node Label
+- name: Get hostname and set node label
   when: nodelabel != ""
   block:
   - name: Get hostname
@@ -82,7 +82,7 @@
     register: hostname
     changed_when: false
   - name: Set node Label
-    command: kubectl label --overwrite node {{ hostname.stdout }} {{ nodelabel }}
+    command: kubectl label node {{ hostname.stdout }} {{ nodelabel }}
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
     delegate_to: "{{ kube_front_end_ip }}"
