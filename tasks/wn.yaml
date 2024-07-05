@@ -69,27 +69,20 @@
       changed_when: false
       failed_when: (kubelet_status.rc != 0) or ('active (running)' not in kubelet_status.stdout)
       ignore_errors: true
-    - name: Show status of kubelet service
-      ansible.builtin.debug:
-        var: kubelet_status
     - name: Fail if kubelet service is not running
       ansible.builtin.fail:
         msg: kubelet is not running!
       when: kubelet_status is failed
 
-- name: Get hostname
-  ansible.builtin.command: hostname
-  register: hostname
-  changed_when: false
-
-- name: Set node Label (for k8s bug at kubelet restart)
-  command: kubectl label --overwrite node {{ hostname.stdout }} {{ nodelabel }}
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  delegate_to: "{{ kube_front_end_ip }}"
+- name: Get hostname ands set node Label
   when: nodelabel != ""
-
-- name: Install nfs-common
-  apt:
-    name: nfs-common
-    state: present
+  block:
+  - name: Get hostname
+    ansible.builtin.command: hostname
+    register: hostname
+    changed_when: false
+  - name: Set node Label
+    command: kubectl label --overwrite node {{ hostname.stdout }} {{ nodelabel }}
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    delegate_to: "{{ kube_front_end_ip }}"
