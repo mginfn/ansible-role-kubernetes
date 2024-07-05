@@ -4,7 +4,8 @@
     name:
       - gpg
       - cron
-    state: present
+      - nfs-common
+    update_cache: yes
 
 - name: Download the public signing key for the Kubernetes package repositories
   apt_key:
@@ -21,7 +22,7 @@
 
 - name: Install kubernetes packages
   apt:
-    pkg:
+    name:
       - kubelet={{ kube_version }}*
       - kubeadm={{ kube_version }}*
       - kubectl={{ kube_version }}*
@@ -29,7 +30,7 @@
 
 - name: Install kubernetes packages
   apt:
-    pkg:
+    name:
       - kubelet
       - kubeadm
       - kubectl
@@ -37,6 +38,6 @@
 
 - name: remove mlocate
   apt:
-    pkg:
+    name:
       - mlocate
     state: absent
