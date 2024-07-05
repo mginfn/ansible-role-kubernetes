@@ -4,6 +4,7 @@
     name:
       - gpg
       - cron
+      - open-iscsi
       - nfs-common
     update_cache: yes
 
